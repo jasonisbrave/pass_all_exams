@@ -243,11 +243,14 @@ python3 scripts/ingest_materials.py \
 
 ## 本地状态
 
-课程数据默认保存在本机：
+数据根目录默认是 `~/.pass-all-exams`，课程保存在其 `courses/` 子目录：
 
 ```text
-~/.pass-all-exams/courses/<course-slug>/
+~/.pass-all-exams/courses/<course-slug>/     # 课程数据
+~/.pass-all-exams/archive/<course-slug>/     # 已归档课程（archive-course 移入，restore-course 移回）
 ```
+
+数据根可用环境变量 `PASS_ALL_EXAMS_HOME` 覆盖，或用全局参数 `--data-home <dir>`（课程位于 `<dir>/courses`）。`--root <dir>` 仍然兼容，但它指的是**课程根目录**（直接包含每门课文件夹的那一层），不是数据根——把数据根传给 `--root` 会把课程建到更深一层。两个参数都可放在子命令之前或之后；同时给出时 `--root` 优先。
 
 主要文件：
 
@@ -259,7 +262,9 @@ python3 scripts/ingest_materials.py \
 | `materials.jsonl` | 资料索引：来源路径、SHA-256、输出路径、标题、字节数、状态。 |
 | `errors.jsonl` | 错题和诊断记录。 |
 | `cards.jsonl` | 检索复习卡和到期日期。 |
-| `sessions.jsonl` | 可选会话日志。 |
+| `sessions.jsonl` | 可选会话日志（`log-session` 追加）。 |
+
+只有 `init` 会创建课程目录；其余命令（record-point、record-error、add-card、status、summary、resolve-error、log-session、archive-course、restore-course）都要求课程目录和 `state.json` 已存在，不存在时清晰报错并退出（退出码 2），不会静默创建目录。
 
 常用脚本：
 
@@ -267,6 +272,25 @@ python3 scripts/ingest_materials.py \
 python3 scripts/examctl.py init --course "组织行为学"
 python3 scripts/examctl.py status --course "组织行为学"
 python3 scripts/examctl.py summary --course "组织行为学"
+
+# 记录一次复习会话（不改动知识点状态）
+python3 scripts/examctl.py log-session \
+  --course "组织行为学" \
+  --action drill \
+  --topic "期望理论" \
+  --result pass \
+  --errors-corrected 1 --cards-added 2
+
+# 把筛选后最新一条 open/stubborn 错题标记为已修正（写 corrected_at 与 --repair，重算 counts）
+python3 scripts/examctl.py resolve-error \
+  --course "组织行为学" \
+  --point "期望理论" \
+  --repair "换角度重讲并重测"
+# 也可用 --contains "混淆" / --date 2026-11-15 过滤，或 --index N 直接按 errors.jsonl 1-based 行号选择
+
+# 归档 / 恢复课程（整目录安全移动，不删除数据；目标已存在时拒绝）
+python3 scripts/examctl.py archive-course --course "组织行为学" --reason "已考完收官"
+python3 scripts/examctl.py restore-course --course "组织行为学"
 ```
 
 转换上传或下载的课程文件：
@@ -288,6 +312,14 @@ python3 scripts/examctl.py record-point \
   --level must \
   --status taught \
   --source material
+
+# 可选：记录掌握证据与复测日期（写入该知识点的 verification / review_due 字段）
+python3 scripts/examctl.py record-point \
+  --course "组织行为学" \
+  --point "期望理论" \
+  --status mastered \
+  --verification "检索题一次通过" \
+  --review-due 2026-12-20
 
 python3 scripts/examctl.py record-error \
   --course "组织行为学" \
@@ -342,6 +374,8 @@ pass_all_exams/
 ├── agents/openai.yaml          # Codex UI 元数据
 ├── configs/example.yaml        # 示例课程配置
 ├── requirements-markitdown.txt # Microsoft MarkItDown 依赖
+├── tests/
+│   └── test_examctl.py         # examctl.py 单元测试（unittest，仅标准库）
 ├── references/
 │   ├── pipeline.md             # 详细复习流程
 │   ├── prompt-patterns.md      # 可复用提示模板

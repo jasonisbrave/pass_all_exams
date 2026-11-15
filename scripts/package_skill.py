@@ -15,6 +15,8 @@ DEFAULT_EXCLUDES = {
     "__pycache__",
     ".pass-all-exams",
     "dist",
+    "experiments",
+    "tests",
 }
 
 
