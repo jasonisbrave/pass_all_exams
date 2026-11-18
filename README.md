@@ -3,164 +3,172 @@
 </p>
 
 <p align="center">
-  <img src="docs/hero.svg" alt="Pass All Exams" width="760"/>
+  <img src="docs/hero.svg" alt="Pass All Exams" width="760" />
 </p>
 
-<h1 align="center">Pass all exams</h1>
+<h1 align="center">Pass All Exams</h1>
 
 <p align="center">
-  <em>Finals week and still not ready? Don't panic. This is the AI era: use a skill to make every review session count twice.</em>
-</p>
-
-<p align="center">
-  <strong>Evidence-grounded exam prep for Codex, Claude Code, OpenClaw, and OpenCode.</strong>
+  <strong>An evidence-grounded Agent Skill for course exams and finals, spanning humanities, business, quantitative, programming, language, and memorization-heavy courses.</strong>
 </p>
 
 <p align="center">
-  Turn teacher notes, syllabi, past papers, and rough knowledge lists into a compact loop:
-  map what can be tested, learn one point, retrieve it, repair mistakes, and schedule review.
+  Turn notes, syllabi, past papers, and teacher priorities into a focused loop of mapping, teaching, retrieval, mistake repair, and spaced review.
 </p>
 
 <p align="center">
-  <a href="https://github.com/SolarAscent/pass_all_exams/releases/tag/v3.0.0"><img src="https://img.shields.io/github/v/release/SolarAscent/pass_all_exams?style=flat-square&label=release&labelColor=111827&color=2563EB" alt="Latest release"/></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-16A34A?style=flat-square&labelColor=111827" alt="MIT license"/></a>
-  <img src="https://img.shields.io/badge/Codex-supported-2563EB?style=flat-square&labelColor=111827" alt="Codex supported"/>
-  <img src="https://img.shields.io/badge/Claude%20Code-supported-D97706?style=flat-square&labelColor=111827" alt="Claude Code supported"/>
-  <img src="https://img.shields.io/badge/OpenClaw-supported-0F766E?style=flat-square&labelColor=111827" alt="OpenClaw supported"/>
-  <img src="https://img.shields.io/badge/OpenCode-supported-9333EA?style=flat-square&labelColor=111827" alt="OpenCode supported"/>
-  <img src="https://img.shields.io/badge/token%20mode-compact-F59E0B?style=flat-square&labelColor=111827" alt="Compact token mode"/>
+  Runs in Codex, Claude Code, OpenClaw, and OpenCode. <a href="#installation">Install the skill</a>, then start with <code>/exam &lt;course&gt; start</code>.
 </p>
 
-<br/>
+<p align="center">
+  <a href="./CHANGELOG.md"><img src="https://img.shields.io/badge/version-3.1.0-2563EB?style=flat-square&amp;labelColor=111827" alt="Version 3.1.0" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-16A34A?style=flat-square&amp;labelColor=111827" alt="MIT license" /></a>
+  <img src="https://img.shields.io/badge/Codex-supported-2563EB?style=flat-square&amp;labelColor=111827" alt="Codex supported" />
+  <img src="https://img.shields.io/badge/Claude%20Code-supported-D97706?style=flat-square&amp;labelColor=111827" alt="Claude Code supported" />
+  <img src="https://img.shields.io/badge/OpenClaw-supported-0F766E?style=flat-square&amp;labelColor=111827" alt="OpenClaw supported" />
+  <img src="https://img.shields.io/badge/OpenCode-supported-9333EA?style=flat-square&amp;labelColor=111827" alt="OpenCode supported" />
+</p>
 
-## What It Does
+## Contents
 
-Pass All Exams is an Agent Skill for students who need a practical review system, not another long pile of notes.
+- [Overview](#overview) · [Why Pass All Exams](#why-pass-all-exams) · [Compatible Agents](#compatible-agents)
+- [Installation](#installation) · [Quick Start](#quick-start) · [Review Loop](#review-loop) · [Evidence Contract](#evidence-contract) · [Commands](#commands)
+- [Token Modes](#token-modes) · [Supported Course Types](#supported-course-types) · [Local State and CLI](#local-state-and-cli)
+- [Build and Validate](#build-and-validate) · [Repository Layout](#repository-layout) · [Privacy](#privacy) · [Acknowledgments](#acknowledgments) · [License](#license)
 
-Its architecture is built around seven small pieces: file ingestion, intake, mapping, teaching, drilling, repairing, and review scheduling. Microsoft [MarkItDown](https://github.com/microsoft/markitdown) converts uploaded PDFs, Word documents, PowerPoint decks, spreadsheets, images, audio, HTML, CSV/JSON/XML, ZIP files, EPubs, and other supported formats into Markdown before the study loop starts. `SKILL.md` stays light so the agent can load quickly; detailed stage rules live in `references/`; deterministic local state is handled by `scripts/examctl.py`; material ingestion is handled by `scripts/ingest_materials.py`; install and packaging helpers keep the same workflow portable across supported agents.
+## Overview
 
-The default session is deliberately small:
+Pass All Exams is for students who need a practical review system, not another long pile of notes. Each session stays deliberately small:
 
 ```text
 one course -> one high-yield point -> one explanation -> one retrieval question -> one repair or review card
 ```
 
-## New to Agent Skills?
+The workflow is divided into focused components:
 
-Pass All Exams runs inside agent tools that can load a `SKILL.md` folder and follow reusable workflows. You do not need to understand their internals, but you do need one compatible agent installed.
+| Component | Responsibility |
+|---|---|
+| [`SKILL.md`](./SKILL.md) | Lightweight agent-facing entry point. |
+| [`references/`](./references/) | Detailed stage rules, loaded only when needed. |
+| [`scripts/examctl.py`](./scripts/examctl.py) | Deterministic local course state and progress records. |
+| [`scripts/ingest_materials.py`](./scripts/ingest_materials.py) | Material conversion and indexing with Microsoft MarkItDown. |
+| [`scripts/install.sh`](./scripts/install.sh) and [`scripts/quick-install.sh`](./scripts/quick-install.sh) | Installation across supported agents. |
+| [`scripts/package_skill.py`](./scripts/package_skill.py) | Uploadable `.skill` archive creation. |
 
-| Tool | What it is | Official link |
-|---|---|---|
-| Codex | OpenAI's coding agent, available through ChatGPT and local developer workflows. | [openai.com/codex](https://openai.com/codex/) |
-| Claude Code | Anthropic's agentic coding assistant. Personal skills live in `~/.claude/skills`; project skills live in `.claude/skills`. | [Claude Code docs](https://code.claude.com/docs/en/overview) |
-| OpenClaw | An open agent platform with a skill system built around `SKILL.md`. | [docs.openclaw.ai](https://docs.openclaw.ai/) |
-| OpenCode | A terminal coding agent that discovers project and global Agent Skills. | [opencode.ai/docs](https://opencode.ai/docs/) |
+## Why Pass All Exams
 
-## Why It Is Different
-
-| Problem in ordinary AI review | Pass All Exams response |
+| Common review problem | How the skill responds |
 |---|---|
 | The model writes long notes but never checks recall. | Every taught point is followed by a retrieval step. |
-| Exam predictions can sound teacher-confirmed when they are not. | Answers separate `Source-backed`, `Reasonable inference`, and `Needs confirmation`. |
+| Exam predictions sound teacher-confirmed when they are not. | Responses distinguish source-backed material, reasonable inference, and items needing confirmation. |
 | Chat history becomes expensive to reread. | Progress lives in `state.json`, `errors.jsonl`, and `cards.jsonl`. |
 | Cram tools often fit only humanities courses. | The pipeline includes qualitative, quantitative, programming, language, and memorization-heavy patterns. |
-| Mistakes get re-explained in the same words. | Errors are classified, repaired with a new representation, then retested from a new angle. |
+| Mistakes are re-explained in the same words. | Errors are classified, repaired with a new representation, and retested from a new angle. |
 
-## Install
+## Compatible Agents
 
-The repository name is `pass_all_exams`; the skill name inside the agent is `pass-all-exams`.
+Pass All Exams runs inside agent tools that can load a folder containing `SKILL.md` and follow its reusable workflow. You need one compatible agent; no knowledge of Agent Skill internals is required.
 
-### Option 0: One-Click Install (Recommended)
+| Agent | What it is | Official resource |
+|---|---|---|
+| Codex | OpenAI's coding agent, available through ChatGPT and local developer workflows. | [openai.com/codex](https://openai.com/codex/) |
+| Claude Code | Anthropic's agentic coding tool. Personal skills use `~/.claude/skills`; project skills use `.claude/skills`. | [Claude Code documentation](https://code.claude.com/docs/en/overview) |
+| OpenClaw | An open agent platform with a skill system built around `SKILL.md`. | [OpenClaw documentation](https://docs.openclaw.ai/) |
+| OpenCode | A coding agent that discovers project and global Agent Skills. | [OpenCode documentation](https://opencode.ai/docs/) |
 
-This single command clones the project, installs MarkItDown for file conversion, and copies the skill into your agent's directory:
+## Installation
+
+The repository name is `pass_all_exams`; the installed skill name is `pass-all-exams`. Run the installer commands below in Bash.
+
+### Option 1: One-Click Install (Recommended)
+
+The quick installer clones the project, installs the MarkItDown file-conversion dependencies, and copies the skill into the selected agent directory:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/SolarAscent/pass_all_exams/main/scripts/quick-install.sh | bash -s -- <agent>
+curl -fsSL https://raw.githubusercontent.com/jasonisbrave/pass_all_exams/main/scripts/quick-install.sh | bash -s -- <agent>
 ```
 
-Replace `<agent>` with your agent key:
+Replace `<agent>` with one of these supported values:
 
-| Agent | Command |
-|---|---|
-| Claude Code, global | `curl -fsSL https://raw.githubusercontent.com/SolarAscent/pass_all_exams/main/scripts/quick-install.sh \| bash -s -- claude` |
-| Claude Code, current project only | `curl -fsSL https://raw.githubusercontent.com/SolarAscent/pass_all_exams/main/scripts/quick-install.sh \| bash -s -- claude-project` |
-| Codex | `curl -fsSL https://raw.githubusercontent.com/SolarAscent/pass_all_exams/main/scripts/quick-install.sh \| bash -s -- codex` |
-| OpenClaw | `curl -fsSL https://raw.githubusercontent.com/SolarAscent/pass_all_exams/main/scripts/quick-install.sh \| bash -s -- openclaw` |
-| OpenCode, global | `curl -fsSL https://raw.githubusercontent.com/SolarAscent/pass_all_exams/main/scripts/quick-install.sh \| bash -s -- opencode` |
-| OpenCode, current project only | `curl -fsSL https://raw.githubusercontent.com/SolarAscent/pass_all_exams/main/scripts/quick-install.sh \| bash -s -- opencode-project` |
+| Agent | Scope | `<agent>` value |
+|---|---|---|
+| Codex | Global, or under `CODEX_HOME` when set | `codex` |
+| Claude Code | Global | `claude` |
+| Claude Code | Current project only | `claude-project` |
+| OpenClaw | Global | `openclaw` |
+| OpenCode | Global | `opencode` |
+| OpenCode | Current project only | `opencode-project` |
 
-Add `--skip-deps` before the agent name if you prefer to install Python dependencies manually later.
-
-### Option 1: Install from Git
+To skip automatic Python dependency installation, place `--skip-deps` before the agent value:
 
 ```bash
-git clone https://github.com/SolarAscent/pass_all_exams.git
+curl -fsSL https://raw.githubusercontent.com/jasonisbrave/pass_all_exams/main/scripts/quick-install.sh | bash -s -- --skip-deps <agent>
+```
+
+### Option 2: Install from Git
+
+Clone the repository and enter its root directory:
+
+```bash
+git clone https://github.com/jasonisbrave/pass_all_exams.git
 cd pass_all_exams
 ```
 
-Install the file-conversion dependency if you want to use uploaded files:
+If you plan to convert course files, install the optional dependency set:
 
 ```bash
 python3 -m pip install -r requirements-markitdown.txt
 ```
 
-Then install for your agent:
+Then run the installer for your agent:
 
-| Agent | Command |
-|---|---|
-| Codex | `bash scripts/install.sh codex` |
-| Claude Code, global | `bash scripts/install.sh claude` |
-| Claude Code, current project only | `bash scripts/install.sh claude-project` |
-| OpenClaw | `bash scripts/install.sh openclaw` |
-| OpenCode, global | `bash scripts/install.sh opencode` |
-| OpenCode, current project only | `bash scripts/install.sh opencode-project` |
+| Agent | Scope | Command |
+|---|---|---|
+| Codex | Global, or under `CODEX_HOME` when set | `bash scripts/install.sh codex` |
+| Claude Code | Global | `bash scripts/install.sh claude` |
+| Claude Code | Current project only | `bash scripts/install.sh claude-project` |
+| OpenClaw | Global | `bash scripts/install.sh openclaw` |
+| OpenCode | Global | `bash scripts/install.sh opencode` |
+| OpenCode | Current project only | `bash scripts/install.sh opencode-project` |
 
-### Option 2: Manual Paths
+For project-local installation, run the command from the root of the project that should receive the skill.
 
-If you prefer to clone directly into the skill directory:
+### Option 3: Clone Directly into a Skill Directory
 
 ```bash
 # Codex
-git clone https://github.com/SolarAscent/pass_all_exams.git ~/.codex/skills/pass-all-exams
+git clone https://github.com/jasonisbrave/pass_all_exams.git ~/.codex/skills/pass-all-exams
 
 # Codex with CODEX_HOME
-git clone https://github.com/SolarAscent/pass_all_exams.git "$CODEX_HOME/skills/pass-all-exams"
+git clone https://github.com/jasonisbrave/pass_all_exams.git "$CODEX_HOME/skills/pass-all-exams"
 
-# Claude Code global
-git clone https://github.com/SolarAscent/pass_all_exams.git ~/.claude/skills/pass-all-exams
+# Claude Code, global
+git clone https://github.com/jasonisbrave/pass_all_exams.git ~/.claude/skills/pass-all-exams
 
-# Claude Code project-local
-git clone https://github.com/SolarAscent/pass_all_exams.git .claude/skills/pass-all-exams
+# Claude Code, project-local
+git clone https://github.com/jasonisbrave/pass_all_exams.git .claude/skills/pass-all-exams
 
 # OpenClaw
-git clone https://github.com/SolarAscent/pass_all_exams.git ~/.openclaw/skills/pass-all-exams
+git clone https://github.com/jasonisbrave/pass_all_exams.git ~/.openclaw/skills/pass-all-exams
 
-# OpenCode global
-git clone https://github.com/SolarAscent/pass_all_exams.git ~/.config/opencode/skill/pass-all-exams
+# OpenCode, global
+git clone https://github.com/jasonisbrave/pass_all_exams.git ~/.config/opencode/skill/pass-all-exams
 
-# OpenCode project-local
-git clone https://github.com/SolarAscent/pass_all_exams.git .opencode/skill/pass-all-exams
+# OpenCode, project-local
+git clone https://github.com/jasonisbrave/pass_all_exams.git .opencode/skill/pass-all-exams
 ```
 
-### Option 3: Download `.skill`
-
-Download the release asset:
-
-```text
-https://github.com/SolarAscent/pass_all_exams/releases/download/v3.0.0/pass-all-exams.skill
-```
-
-Use this when your agent or UI supports uploading skill archives.
+If your agent accepts uploaded skill archives, you can also [build a `.skill` package locally](#build-and-validate).
 
 ## Quick Start
 
-After installation, start with a natural request:
+After installation, ask the agent to start a course:
 
 ```text
 /exam Organizational Behavior start
 ```
 
-or:
+Or provide the context you already have in natural language:
 
 ```text
 Use pass-all-exams to help me review Organizational Behavior.
@@ -168,20 +176,19 @@ The exam has multiple choice, short answer, and case analysis.
 My must-know topics are Hawthorne studies and expectancy theory.
 ```
 
-For Chinese courses:
+Chinese courses work in the same way:
 
 ```text
 /exam 组织行为学 start
 ```
 
-or:
-
 ```text
-帮我用 pass-all-exams 复习组织行为学。考试题型是选择题、简答题和案例分析。
+帮我用 pass-all-exams 复习组织行为学。
+考试题型是选择题、简答题和案例分析。
 老师强调必考：霍桑实验、期望理论。我会继续粘贴课堂笔记。
 ```
 
-If you have files, ingest them first:
+To include course files, run the ingestion script from the repository root or installed skill directory:
 
 ```bash
 python3 scripts/ingest_materials.py \
@@ -191,82 +198,103 @@ python3 scripts/ingest_materials.py \
   ~/Downloads/review-notes.docx
 ```
 
-Converted Markdown is saved under the course's local `materials/` directory and reused by later stages.
+The converted Markdown is saved in the course's local `materials/` directory and reused by later stages.
 
-## The Review Loop
+## Review Loop
 
-```text
-Intake
-  collect course, exam date, question types, materials, must-know points
-
-Ingest
-  convert uploaded files to Markdown with Microsoft MarkItDown and cache by SHA-256
-
-Map
-  split materials into exam-sized points and mark source confidence
-
-Teach
-  explain one point with concrete-first, <=3 chunks, one self-generation prompt
-
-Drill
-  test by real exam type: choice, case, calculation, code tracing, short answer...
-
-Repair
-  classify the miss, switch method, retest with a new angle
-
-Review
-  create same-day, next-day, 3-day, and final-day retrieval cards
-```
+| Stage | What happens |
+|---|---|
+| **Intake** | Collect the course, exam date or time budget, question types, materials, and must-know points. |
+| **Ingest** | Convert uploaded files to Markdown with Microsoft MarkItDown and cache converted materials by SHA-256. |
+| **Map** | Split materials into exam-sized points and mark source confidence. |
+| **Teach** | Explain one point concrete-first, in at most three chunks, with one self-generation prompt. |
+| **Drill** | Practise using the real exam types: choice, case analysis, calculation, code tracing, short answer, and others. |
+| **Diagnose and repair** | Classify the miss, switch representation, and retest from a new angle instead of repeating the explanation. |
+| **Review** | Create same-day, next-day, three-day, and final-day retrieval cards. |
 
 ## Evidence Contract
 
-Every substantive explanation or grading response should make the source status visible:
+Every substantive explanation, exam prediction, or grading response should make its source status visible:
 
-```text
-Source-backed:
-- Directly supported by the notes, syllabus, teacher wording, or pasted material.
+| Label | Meaning |
+|---|---|
+| **Source-backed** | Directly supported by notes, syllabi, teacher wording, past papers, or pasted material. |
+| **Reasonable inference** | A useful exam-preparation inference based on standard course knowledge and common assessment patterns. |
+| **Needs confirmation** | Something that depends on the teacher, textbook edition, or local exam scope and still needs checking. |
 
-Reasonable inference:
-- Useful exam-prep inference from standard course knowledge.
-
-Needs confirmation:
-- Things that may depend on your teacher, textbook edition, or local exam scope.
-```
-
-This is the main hallucination-control layer. If you provide no materials, the skill will operate in general-knowledge mode and should not pretend to know your teacher's real exam scope.
+This is the main hallucination-control layer. Without materials, the skill uses general-knowledge mode and must not pretend to know the teacher's actual exam scope; provide a syllabus or point list before relying on high-stakes predictions.
 
 ## Commands
+
+These commands are prompts interpreted by the agent, not standalone shell commands.
 
 | Command | Use |
 |---|---|
 | `/exam <course> start` | Create or refresh a course plan. |
-| `/cram <course> start` | Alias for students coming from cram-style workflows. |
-| `/exam <course> resume` | Continue from saved progress. |
-| `/exam <course> drill` | Generate practice from weak points and due review cards. |
-| `/exam <course> retry <point>` | Reteach, retest, and update one weak point. |
+| `/cram <course> start` | Alias for cram-style workflows. |
+| `/exam <course> resume` | Continue from saved progress and recent JSONL records. |
+| `/exam <course> drill` | Retrieve current weak points and practise due material. |
+| `/exam <course> retry <point>` | Reteach and retest a weak point, resolve the selected error, and log the session. |
 | `/exam <course> summary` | Produce a final-day checklist. |
 
-## Local State
+## Token Modes
 
-Course state is stored locally:
+| Mode | Best for | Behavior |
+|---|---|---|
+| `compact` | Most cram sessions | One point, one example, one question, and one correction. |
+| `standard` | Normal weekly review | Adds one example and a relation to a prior point. |
+| `deep` | Hard subjects or high-stakes finals | Adds derivation, edge cases, and mixed practice. |
+
+The default is `compact`. Progressive disclosure keeps `SKILL.md` short: detailed rules in `references/` are loaded only when needed.
+
+## Supported Course Types
+
+| Course type | Examples | Special handling |
+|---|---|---|
+| Humanities and social sciences | Law, politics, sociology, education | Definitions, comparisons, and case-analysis scoring structures |
+| Business and management | Organizational behavior, marketing, accounting theory | Frameworks, traps, and case application |
+| Quantitative courses | Calculus, statistics, economics methods | Formula conditions, worked examples, and calculation-error diagnosis |
+| Programming courses | Data structures, databases, operating systems, Python/C/Java | Trace questions, bug repair, and complexity explanations |
+| Language and memorization-heavy courses | English, history, medicine basics | Cloze exercises, recall cards, and contrast tables |
+
+## Local State and CLI
+
+Run the Python commands in this section from the repository root or installed skill directory.
+
+### Storage and Files
+
+By default, active and archived courses are stored at:
 
 ```text
 ~/.pass-all-exams/courses/<course-slug>/
+~/.pass-all-exams/archive/<course-slug>/
 ```
 
-Inside each course:
+`examctl.py` supports three ways to select storage:
 
-| File | Purpose |
+- Set `PASS_ALL_EXAMS_HOME` to override the data home; courses live under `<data-home>/courses`.
+- Pass `--data-home <dir>` to select `<dir>/courses`. It overrides the environment variable and is accepted before or after the subcommand.
+- Pass `--root <courses-dir>` to name the directory that directly contains course folders. It takes precedence over `--data-home` and is also accepted before or after the subcommand. Do not pass the data home itself to `--root`.
+
+For ingestion with custom storage, pass the same courses directory to `ingest_materials.py --root <courses-dir>`.
+
+Within `examctl.py`, only `init` creates a course. Its other subcommands require an existing course directory and `state.json`; missing state produces a clear error with exit code 2 instead of silently creating files.
+
+Each course can contain:
+
+| File or directory | Purpose |
 |---|---|
-| `course.yaml` | Course profile: exam types, materials, must-know points, preferences. |
-| `state.json` | Current stage and point-level status. |
-| `materials/` | MarkItDown-converted Markdown files. |
-| `materials.jsonl` | Material index: source path, SHA-256, output path, title, byte count, status. |
-| `errors.jsonl` | Wrong answers and diagnosis history. |
+| `course.yaml` | Course profile: exam types, materials, must-know points, and preferences. |
+| `state.json` | Current stage, point-level status, and counts. |
+| `materials/` | Markdown files converted by MarkItDown. |
+| `materials.jsonl` | Material index: source path, SHA-256, output path, title, byte count, and status. |
+| `errors.jsonl` | Wrong answers, diagnoses, and repair history. |
 | `cards.jsonl` | Retrieval cards and due dates. |
-| `sessions.jsonl` | Optional session log. |
+| `sessions.jsonl` | Session log appended by `log-session`. |
 
-Useful helper commands:
+### Course and Session Commands
+
+Create a course, inspect progress, or print a summary:
 
 ```bash
 python3 scripts/examctl.py init --course "Organizational Behavior"
@@ -274,17 +302,42 @@ python3 scripts/examctl.py status --course "Organizational Behavior"
 python3 scripts/examctl.py summary --course "Organizational Behavior"
 ```
 
-Convert uploaded or downloaded course files:
+Log a session without changing point status:
 
 ```bash
-python3 scripts/ingest_materials.py --course "Organizational Behavior" ~/Downloads/syllabus.pdf
+python3 scripts/examctl.py log-session \
+  --course "Organizational Behavior" \
+  --action drill \
+  --topic "Expectancy theory" \
+  --result pass \
+  --errors-corrected 1 \
+  --cards-added 2
 ```
 
-By default, ingestion accepts local files only. Trusted URLs require `--allow-url` because MarkItDown reads with the privileges of the current process.
+Resolve the latest matching open or stubborn error and record the repair:
 
-Audio transcription may require system audio tooling such as `ffmpeg`; ordinary PDF/Office/text conversion does not.
+```bash
+python3 scripts/examctl.py resolve-error \
+  --course "Organizational Behavior" \
+  --point "Expectancy theory" \
+  --repair "Retaught with a contrast table and retested with a new scenario"
 
-Example records:
+# Optional filters: --contains "confusion", --date 2026-11-15,
+# or --index N for a 1-based line number in errors.jsonl.
+```
+
+Archive a completed course or restore it later. Both operations move the whole directory without deleting data and refuse to overwrite an existing target:
+
+```bash
+python3 scripts/examctl.py archive-course \
+  --course "Organizational Behavior" \
+  --reason "Course completed"
+python3 scripts/examctl.py restore-course --course "Organizational Behavior"
+```
+
+### Record Progress and Errors
+
+Record a taught point:
 
 ```bash
 python3 scripts/examctl.py record-point \
@@ -293,7 +346,22 @@ python3 scripts/examctl.py record-point \
   --level must \
   --status taught \
   --source material
+```
 
+Optionally record mastery evidence and a review date:
+
+```bash
+python3 scripts/examctl.py record-point \
+  --course "Organizational Behavior" \
+  --point "Expectancy theory" \
+  --status mastered \
+  --verification "Passed a retrieval question without notes" \
+  --review-due 2026-12-20
+```
+
+Record an error:
+
+```bash
 python3 scripts/examctl.py record-error \
   --course "Organizational Behavior" \
   --point "Expectancy theory" \
@@ -302,35 +370,29 @@ python3 scripts/examctl.py record-error \
   --must-know
 ```
 
-## Token Modes
+### Material Ingestion
 
-| Mode | Best for | Behavior |
-|---|---|---|
-| `compact` | Most cram sessions | One point, one example, one question, one correction. |
-| `standard` | Normal weekly review | Adds one extra example and a relation to a prior point. |
-| `deep` | Hard subjects or high-stakes finals | Adds derivation, edge cases, and mixed practice. |
+Microsoft [MarkItDown](https://github.com/microsoft/markitdown) converts PDF, Word, PowerPoint, Excel, images, audio, HTML, CSV, JSON, XML, ZIP, EPub, and other supported formats into Markdown before the study loop uses them.
 
-The default is `compact`. The skill also uses progressive disclosure: `SKILL.md` stays short, while stage rules live in `references/` and are loaded only when needed.
+```bash
+python3 scripts/ingest_materials.py \
+  --course "Organizational Behavior" \
+  ~/Downloads/syllabus.pdf
+```
 
-## Supported Course Types
+By default, ingestion accepts local files only. Trusted HTTP(S) URLs require `--allow-url` because MarkItDown reads resources with the current process's privileges. Audio transcription may require system audio tooling such as `ffmpeg`; ordinary PDF, Office, and text conversion does not.
 
-| Course type | Examples | Special handling |
-|---|---|---|
-| Humanities and social science | law, politics, sociology, education | definitions, comparisons, case-analysis score skeletons |
-| Business and management | organizational behavior, marketing, accounting theory | frameworks, traps, case application |
-| Quantitative courses | calculus, statistics, economics methods | formula conditions, worked examples, calculation error diagnosis |
-| Programming courses | data structures, databases, OS, Python/C/Java | trace questions, bug repair, complexity explanation |
-| Language and memorization-heavy courses | English, history, medicine basics | cloze, recall cards, contrast tables |
+## Build and Validate
 
-## Build a Skill Package
-
-Create an uploadable `.skill` archive:
+From the repository root, create an uploadable `.skill` archive:
 
 ```bash
 python3 scripts/package_skill.py
 ```
 
-Validate the package layout:
+The default output is `dist/pass-all-exams.skill`. Use this file with an agent or interface that supports uploaded skill archives.
+
+Validate the package layout and compile the Python scripts:
 
 ```bash
 python3 scripts/validate_skill.py
@@ -341,34 +403,43 @@ python3 -m py_compile scripts/examctl.py scripts/ingest_materials.py scripts/val
 
 ```text
 pass_all_exams/
-├── CHANGELOG.md
-├── PROJECT_CHECK.md
-├── SKILL.md                    # agent-facing entry point
-├── agents/openai.yaml          # Codex UI metadata
-├── configs/example.yaml        # sample course profile
-├── requirements-markitdown.txt # Microsoft MarkItDown dependency set
+├── SKILL.md                     # Agent-facing entry point
+├── README.md                    # English documentation
+├── README.zh-CN.md              # Chinese documentation
+├── CHANGELOG.md                 # Release history
+├── PROJECT_CHECK.md             # Validation record
+├── LICENSE                      # MIT license
+├── requirements-markitdown.txt  # MarkItDown dependency set
+├── agents/
+│   └── openai.yaml              # Codex UI metadata
+├── configs/
+│   └── example.yaml             # Sample course profile
+├── docs/
+│   └── hero.svg                 # README artwork
 ├── references/
-│   ├── pipeline.md             # detailed review workflow
-│   ├── prompt-patterns.md      # reusable prompt shapes
-│   ├── platforms.md            # Codex/Claude Code/OpenClaw/OpenCode notes
-│   └── comparison.md           # design notes from related projects
+│   ├── pipeline.md              # Detailed review workflow
+│   ├── prompt-patterns.md       # Reusable prompt shapes
+│   ├── platforms.md             # Agent installation notes
+│   └── comparison.md            # Design comparison notes
 ├── scripts/
-│   ├── examctl.py              # deterministic course state helper
-│   ├── ingest_materials.py     # MarkItDown material ingestion helper
-│   ├── install.sh              # cross-agent install helper
-│   ├── package_skill.py        # .skill archive builder
-│   └── validate_skill.py       # portable package validator
-└── docs/hero.svg
+│   ├── examctl.py               # Local course state helper
+│   ├── ingest_materials.py      # MarkItDown ingestion helper
+│   ├── install.sh               # Agent install helper
+│   ├── quick-install.sh         # One-click installer
+│   ├── package_skill.py         # .skill archive builder
+│   └── validate_skill.py        # Package layout validator
+└── tests/
+    └── test_examctl.py          # Standard-library unittest suite
 ```
 
 ## Privacy
 
-All course state is local by default. The skill does not require an external service, database, or account. Your notes, wrong answers, and review cards remain in `~/.pass-all-exams/` unless you explicitly move or share them.
+Course state is stored locally by default. The skill does not require its own external service, database, or account; notes, errors, and review cards remain under the selected data home unless you move or share them. Review your agent's and MarkItDown's settings before processing sensitive materials.
 
 ## Acknowledgments
 
-This project uses [Microsoft MarkItDown](https://github.com/microsoft/markitdown) to convert uploaded course materials (PDF, Word, PowerPoint, Excel, images, audio, HTML, CSV, JSON, XML, ZIP, EPub, and more) into Markdown for the study pipeline. MarkItDown is developed and maintained by Microsoft.
+This project uses [Microsoft MarkItDown](https://github.com/microsoft/markitdown) to turn course materials into Markdown for the study pipeline. MarkItDown is developed and maintained by Microsoft.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](./LICENSE)
